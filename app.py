@@ -15,6 +15,5 @@ app.register_blueprint(admin.admin)
 
 if __name__ == '__main__':
     app.run(
-        debug=os.getenv('FLASK_DEBUG', 'False').lower() == 'true',
         host=os.getenv('FLASK_HOST', 'localhost')
     )
