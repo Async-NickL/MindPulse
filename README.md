@@ -64,8 +64,7 @@ OPENCAGE_API_KEY=your_opencage_api_key
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd AISSMS
+git clone https://github.com/Async-NickL/MindPulse.git
 ```
 
 2. Create and activate virtual environment:
@@ -184,4 +183,4 @@ AISSMS/
 
 ## 📞 Support
 
-For support, email [nikhilkole.html@gmail.com] or join our community channel. 
+For support, email nikhilkole.html@gmail.com
