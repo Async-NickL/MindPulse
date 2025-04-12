@@ -1,0 +1,52 @@
+{% extends 'layout/layout.html' %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/home.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="contain relative overflow-hidden h-screen flex w-full justify-center items-center" style="background-color: var(--background);">
+    <div class="bg-text opacity-[.1] select-none absolute w-full flex justify-center items-center text-[10vw] max-sm:hidden max-md:text-[20vw] font-extrabold" style="color: var(--text);">
+        <h1>MindPulse MindPulse MindPulse</h1>
+        <h1>MindPulse MindPulse MindPulse</h1>
+        <h1>MindPulse MindPulse MindPulse</h1>
+        <h1>MindPulse MindPulse MindPulse</h1>
+    </div>
+    <div class="card z-[100]" style="background-color: var(--light-background);">
+        <div class="top-section">
+            <div class="border"></div>
+            <div class="icons">
+                <div class="logo text-center font-extrabold" style="color: var(--text); transform: translateY(-7px);">
+                    <h1>MindPulse</h1>
+                </div>
+                <div class="social-media text-center relative justify-center items-center" style="color: var(--text);">
+                    <h1 class="text-[9px]">{{user['email']}}</h1>
+                </div>
+            </div>
+        </div>
+        <div class="bottom-section text-center">
+            {% if lsd %}
+                <h1 class="-translate-y-8 text-3xl" style="color: var(--text);">
+                    <span class="px-2 py-1 rounded-full" style="border: solid var(--text);">{{ 100-lsd['avg'] }}</span>
+                </h1>
+            {% endif %}
+            <span class="title uppercase">{{user['name']}}</span>
+            <div class="row row1">
+                <div class="item">
+                    <span class="big-text uppercase">{{user['profession']}}</span>
+                    <span class="regular-text">Profession</span>
+                </div>
+                <div class="item">
+                    <span class="big-text">{{user['age']}}</span>
+                    <span class="regular-text">Age</span>
+                </div>
+                <div class="item">
+                    <span class="big-text uppercase">{{user['gender']}}</span>
+                    <span class="regular-text">Gender</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+{% endblock %}
+

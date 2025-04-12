@@ -1,0 +1,32 @@
+{% extends 'layout/main.html' %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style/main.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap justify-center items-center w-full min-h-screen">
+    <div class="section-1 h-screen max-sm:w-full max-sm:h-3/4 w-full max-w-3xl relative max-sm:hidden">
+        <div class="hider absolute h-[40px] w-[150px] z-[10] bottom-5 right-5"></div>
+        <spline-viewer url="https://prod.spline.design/eoqjRoxz5Dt9t7Gi/scene.splinecode"></spline-viewer>
+    </div>
+
+    <div class="section-2 flex flex-col gap-8 h-auto max-sm:w-full max-sm:h-3/4 w-full max-w-md justify-center max-sm:text-center">
+        <h1 class="title text-3xl font-bold mb-6"><span style="color: #6d49e4;">Mind-Pulse</span> <span style="color: white;">:</span> Mental Health Tracker</h1>
+        <div class="content text-lg">
+            <p class="mb-4">
+                <span class="text-2xl text-[#6d49e4] font-bold">W</span>elcome to the Mental Health Tracker, your 
+                <span class="font-bold">personal companion</span> for monitoring and improving your 
+                <span class="font-bold">mental well-being</span>. 
+                Our app provides tools to track your mood, set goals, and reflect on your mental health journey.
+                <span class="font-bold">Plus, you can chat with others</span> to build a supportive community and share your experiences ! 
+            </p>
+        </div>
+        <div class="btns flex gap-4 max-sm:justify-center">
+            <a href="sign/admin" class="button"><span>As Admin</span></a>
+            <a href="sign/user" class="button ml-4"><span>As User</span></a>
+        </div>
+    </div>
+</div>
+<script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.59/build/spline-viewer.js"></script>
+{% endblock %}

@@ -1,0 +1,42 @@
+:root {
+    --text: #03001f;
+    --background: #cfc1fd;
+    --light-background: #a185ff;
+    --primary: #2e1e62;
+    --secondary: #502db9;
+    --accent: #3f1bb6;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text: #e3e0ff;
+        --background: #120e1c;
+        --light-background: #372d58eb;
+        --primary: #ad9de1;
+        --secondary: #6946d2;
+        --accent: #6d49e4;
+    }
+}
+
+.sidebar{
+    background-color: var(--light-background);
+}
+
+.svg-container svg path {
+    fill: var(--primary);
+}
+
+.svg-container:hover svg path {
+    fill: var(--secondary);
+}
+
+.svg-container svg {
+    width: 70%; 
+    height: auto; 
+}
+
+.svg-container a {
+    width: 100%; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

@@ -1,0 +1,410 @@
+{% extends 'layout/layout.html' %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style/nearby.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/notification.css') }}">
+<!-- Add Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>  
+<style>
+    #map-container {
+        display: none;
+        margin-top: 1rem;
+    }
+    #map {
+        height: 400px;
+        width: 100%;
+        border-radius: 8px;
+        border: 2px solid var(--primary);
+    }
+    .map-instructions {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background-color: var(--light-background);
+        border-radius: 8px;
+        color: var(--text);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen w-full p-4 md:p-8" style="background-color: var(--background);">
+    <!-- Header Section -->
+    <div class="mb-8 text-center">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: var(--primary);">Nearby Medical Facilities</h1>
+        <p class="text-lg opacity-80" style="color: var(--text);">Find healthcare facilities in your area</p>
+    </div>
+
+    <!-- Location Input Section -->
+    <div class="mb-8 max-w-md mx-auto">
+        <div class="flex flex-col gap-4">
+            <div id="locationStatus" class="p-4 rounded-xl text-center" 
+                 style="background-color: var(--light-background);">
+                <p class="text-lg" style="color: var(--text);">Detecting your location...</p>
+            </div>
+            
+            <!-- Manual Location Input -->
+            <div id="manualLocationInput" class="hidden">
+                <form id="locationForm" class="flex flex-col gap-4">
+                    <input type="text" id="cityInput" 
+                           placeholder="Enter your city or area" 
+                           class="w-full p-3 rounded-lg"
+                           style="background-color: var(--light-background); color: var(--text); border: 1px solid var(--primary);">
+                    <button type="submit" 
+                            class="w-full p-3 rounded-lg font-semibold transition-all hover:opacity-90"
+                            style="background-color: var(--primary); color: var(--text);">
+                        Search Location
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Toggle Button -->
+            <button id="toggleLocationMethod" 
+                    class="text-sm underline opacity-80 hover:opacity-100"
+                    style="color: var(--text);">
+                Or enter location manually
+            </button>
+        </div>
+    </div>
+
+    <!-- Add map container after manual location input -->
+    <div id="map-container" class="mb-8 max-w-md mx-auto">
+        <div class="map-instructions">
+            <p class="mb-2">📍 Click anywhere on the map to select your location</p>
+            <p class="text-sm opacity-80">You can drag and zoom the map to find your area</p>
+        </div>
+        <div id="map"></div>
+        <button id="useSelectedLocation" 
+                class="w-full mt-4 p-3 rounded-lg font-semibold transition-all hover:opacity-90"
+                style="background-color: var(--primary); color: var(--text); display: none;">
+            Use Selected Location
+        </button>
+    </div>
+
+    <!-- Places Grid -->
+    <div id="placesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Places will be populated here -->
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<script>
+function showNotification(message, type = 'error') {
+    // Create notification container if it doesn't exist
+    if (!document.getElementById('notification-container')) {
+        const container = document.createElement('div');
+        container.id = 'notification-container';
+        document.body.appendChild(container);
+    }
+
+    // Create notification
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    // Set icon based on type
+    let icon = '❌';
+    if (type === 'success') icon = '✅';
+    if (type === 'warning') icon = '⚠️';
+    if (type === 'info') icon = 'ℹ️';
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">${icon}</span>
+            <span class="notification-message">${message}</span>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+
+    // Add to container
+    document.getElementById('notification-container').appendChild(notification);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const locationStatus = document.getElementById('locationStatus');
+    const placesGrid = document.getElementById('placesGrid');
+    const manualLocationInput = document.getElementById('manualLocationInput');
+    const toggleLocationMethod = document.getElementById('toggleLocationMethod');
+    const locationForm = document.getElementById('locationForm');
+    const cityInput = document.getElementById('cityInput');
+    const mapContainer = document.getElementById('map-container');
+    const useSelectedLocationBtn = document.getElementById('useSelectedLocation');
+    let isUsingManualLocation = false;
+    let map, marker;
+    let selectedLocation = null;
+
+    function updateLocationStatus(message, isError = false) {
+        locationStatus.innerHTML = `
+            <p class="text-lg" style="color: ${isError ? '#dc3545' : 'var(--text)'};">
+                ${message}
+            </p>
+            ${isError ? `
+                <p class="text-sm mt-2" style="color: var(--text);">
+                    Try these options:
+                    <br>• Enter a different city name
+                    <br>• Use a more specific location
+                    <br>• Include state/country name
+                </p>
+            ` : ''}
+        `;
+    }
+
+    function createPlaceCard(place) {
+        const tags = place.tags || {};
+        const name = tags.name || 'Unnamed Facility';
+        const type = tags.amenity || tags.healthcare || 'Medical Facility';
+        const phone = tags.phone || 'Not available';
+        
+        return `
+            <div class="place-card p-6 rounded-xl transition-all hover:shadow-lg" 
+                 style="background-color: var(--light-background); border: 1px solid var(--primary);">
+                <div class="mb-4">
+                    <h3 class="text-xl font-semibold mb-2" style="color: var(--primary);">${name}</h3>
+                    <p class="text-sm opacity-80" style="color: var(--text);">Type: ${type}</p>
+                </div>
+                <div class="space-y-2" style="color: var(--text);">
+                    <p class="text-sm">📞 Phone: ${phone}</p>
+                    <p class="text-sm">📍 Location: ${place.lat.toFixed(6)}, ${place.lon.toFixed(6)}</p>
+                </div>
+                <a href="https://www.google.com/maps?q=${place.lat},${place.lon}" 
+                   target="_blank"
+                   class="mt-4 inline-block px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
+                   style="background-color: var(--primary); color: var(--text);">
+                    Open in Maps
+                </a>
+            </div>
+        `;
+    }
+
+    function getNearbyPlaces(lat, lon) {
+        updateLocationStatus('Searching for medical facilities...');
+        placesGrid.innerHTML = '<div class="col-span-full text-center"><div class="loading">Loading...</div></div>';
+        
+        fetch(`/get-nearby-places/{{id}}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ lat, lon })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            if (data.places && data.places.length > 0) {
+                placesGrid.innerHTML = data.places.map(createPlaceCard).join('');
+                updateLocationStatus(`Found ${data.places.length} medical facilities near you`);
+            } else {
+                placesGrid.innerHTML = `
+                    <div class="col-span-full text-center p-8">
+                        <p class="text-lg opacity-70" style="color: var(--text);">
+                            No medical facilities found nearby
+                        </p>
+                    </div>
+                `;
+                updateLocationStatus('No facilities found in your area');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            updateLocationStatus(error.message || 'Error fetching nearby places', true);
+        });
+    }
+
+    function initMap() {
+        try {
+            // Check if map is already initialized
+            if (map) {
+                map.remove();
+            }
+            
+            // Initialize map centered on India
+            map = L.map('map', {
+                zoomControl: true,
+                scrollWheelZoom: true
+            }).setView([20.5937, 78.9629], 5);
+            
+            // Add tile layer with error handling
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Handle map clicks
+            map.on('click', function(e) {
+                const { lat, lng } = e.latlng;
+                setSelectedLocation(lat, lng);
+            });
+
+            // Force a map refresh
+            setTimeout(() => {
+                map.invalidateSize(true);
+            }, 100);
+
+            console.log('Map initialized successfully');
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            showNotification('Error loading map. Please refresh the page.', 'error');
+        }
+    }
+
+    function setSelectedLocation(lat, lng) {
+        selectedLocation = { lat, lng };
+        
+        // Update or create marker
+        if (marker) {
+            marker.setLatLng([lat, lng]);
+        } else {
+            marker = L.marker([lat, lng]).addTo(map);
+        }
+
+        // Show the use location button
+        useSelectedLocationBtn.style.display = 'block';
+        
+        // Reverse geocode to get location name
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key={{ opencage_api_key }}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.results && data.results.length > 0) {
+                    const locationName = data.results[0].formatted;
+                    marker.bindPopup(`Selected: ${locationName}`).openPopup();
+                }
+            });
+    }
+
+    function showMapSelector() {
+        mapContainer.style.display = 'block';
+        // Add a small delay before initializing the map
+        setTimeout(() => {
+            if (!map) {
+                initMap();
+            } else {
+                map.invalidateSize(true);
+            }
+        }, 100);
+    }
+
+    // Update getAutomaticLocation function
+    function getAutomaticLocation() {
+        if (navigator.geolocation) {
+            navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
+                switch (permissionStatus.state) {
+                    case 'granted':
+                        requestLocation();
+                        break;
+                    case 'prompt':
+                        showNotification('Please allow location access when prompted', 'info');
+                        requestLocation();
+                        break;
+                    case 'denied':
+                        showNotification('Select your location on the map', 'info');
+                        updateLocationStatus('Please select your location:', false);
+                        showMapSelector();
+                        showManualInput();
+                        break;
+                }
+            }).catch(() => {
+                requestLocation();
+            });
+        } else {
+            showNotification('Please select your location on the map', 'info');
+            updateLocationStatus('Location services not available. Please select your location:', false);
+            showMapSelector();
+            showManualInput();
+        }
+    }
+
+    // Update manual location form handler
+    locationForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const city = cityInput.value.trim();
+        
+        if (!city) {
+            showNotification('Please enter a city or area name', 'error');
+            return;
+        }
+
+        updateLocationStatus('Searching for your location...');
+        
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(city)}&key={{ opencage_api_key }}&limit=1`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.results && data.results.length > 0) {
+                    const { lat, lng } = data.results[0].geometry;
+                    const locationName = data.results[0].formatted;
+                    
+                    // Update map if visible
+                    if (map) {
+                        map.setView([lat, lng], 13);
+                        setSelectedLocation(lat, lng);
+                    }
+                    
+                    showNotification(`Location found: ${locationName}`, 'success');
+                    getNearbyPlaces(lat, lng);
+                } else {
+                    throw new Error('Location not found');
+                }
+            })
+            .catch(error => {
+                showNotification('Could not find this location. Try selecting on the map.', 'error');
+                showMapSelector();
+            });
+    });
+
+    // Handle selected location button click
+    useSelectedLocationBtn.addEventListener('click', () => {
+        if (selectedLocation) {
+            getNearbyPlaces(selectedLocation.lat, selectedLocation.lng);
+        }
+    });
+
+    // Show manual input with helpful placeholder
+    function showManualInput() {
+        manualLocationInput.classList.remove('hidden');
+        cityInput.placeholder = "Example: Mumbai, Maharashtra";
+        cityInput.focus();
+        toggleLocationMethod.textContent = 'Try automatic location again';
+        isUsingManualLocation = true;
+    }
+
+    // Fix the toggle button functionality
+    toggleLocationMethod.addEventListener('click', () => {
+        if (isUsingManualLocation) {
+            // Switch back to automatic location
+            manualLocationInput.classList.add('hidden');
+            mapContainer.style.display = 'none';
+            toggleLocationMethod.textContent = 'Or enter location manually';
+            isUsingManualLocation = false;
+            getAutomaticLocation();
+        } else {
+            // Switch to manual input
+            manualLocationInput.classList.remove('hidden');
+            mapContainer.style.display = 'block';
+            if (!map) {
+                initMap();
+            }
+            setTimeout(() => map.invalidateSize(), 100);
+            cityInput.placeholder = "Example: Mumbai, Maharashtra";
+            cityInput.focus();
+            toggleLocationMethod.textContent = 'Try automatic location again';
+            isUsingManualLocation = true;
+            updateLocationStatus('Enter your location or select on the map', false);
+        }
+    });
+
+    // Start the location process
+    getAutomaticLocation();
+});
+</script>
+{% endblock %}
+

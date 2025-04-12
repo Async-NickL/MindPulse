@@ -1,0 +1,108 @@
+{% extends 'layout/main.html' %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+    //first pie chart
+        google.charts.load("current", {packages:["corechart"]});
+        google.charts.setOnLoadCallback(drawAngerChart);
+        function drawAngerChart() {
+            var data = google.visualization.arrayToDataTable([
+            ['Mood', 'Anger'],
+            ['Peace', {{ lsd['stress']+lsd['anxiety']+lsd['anger']/3 }}],
+            {% if lsd %}
+            ['Stress', {{ lsd['stress'] }}],
+            ['Anger', {{ lsd['anger'] }}], 
+            ['Anxiety', {{ lsd['anxiety'] }}]
+            {% else %}
+            ['Stress', 0],
+            ['Anger', 0],
+            ['Anxiety', 0]
+            {% endif %}
+            ]);
+            var options = {
+            title: 'CURRENT MENTAL PULSE',
+            pieHole: 0.2,
+            backgroundColor: '#ad85e0',
+            };
+            var chart = new google.visualization.PieChart(document.getElementById('anger'));
+            chart.draw(data, options);
+        };
+
+//daily avg 
+    google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawDailyChart);
+        function drawDailyChart() {
+            var data = google.visualization.arrayToDataTable([
+            ['Year', 'Anger', 'Stress', 'Anxiety'],
+            {% for day in tsd %}
+            ['{{ day['date'] }}', {{ day['anger'] }}, {{ day['stress'] }}, {{ day['anxiety'] }}],
+            {% endfor %}
+            ]);
+            var options = {
+            title: 'Todays Mental Growth',
+            curveType: 'function',
+            legend: { position: 'bottom' },
+            colors: ['#FF073A', '#2F2F2F', '#00BFFF'],
+            backgroundColor: '#ad85e0'
+            };
+            var chart = new google.visualization.LineChart(document.getElementById('daily'));
+            chart.draw(data, options);
+        }
+
+//last graph
+    google.charts.load('current', {'packages':['bar']});
+        google.charts.setOnLoadCallback(drawChart);
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable([
+            ['Date', 'Anger', 'Anxiety', 'Stress'],
+            {% for key, value in fsd.items() %}
+            ['{{ key }}', {{ value['anger'] }}, {{ value['anxiety'] }}, {{ value['stress'] }}],
+            {% endfor %}
+            ]);
+
+            var options = {
+            chart: {
+                title: 'Total track of Mental Health',
+                subtitle: 'Your past 5 days MentalPulse',
+            },
+            colors: ['#0D47A1', '#6A1B9A', '#E65100', '#C2185B']
+            };
+            var chart = new google.charts.Bar(document.getElementById('avgGraph'));
+            chart.draw(data, google.charts.Bar.convertOptions(options));
+        }
+
+
+</script>
+{% endblock %}
+
+{% block content %}
+    <div class="min-h-screen overflow-hidden flex flex-col gap-7 relative  w-full px-2" style="background-color: var(--background);">
+        <div class="top uppercase translate-y-[10px] w-full flex flex-wrap justify-around gap-4 " style="color: var(--text);">
+            <h1  class="flex-1 font-bold min-w-[200px] px-4 py-3 rounded-lg text-center  ">
+                <span style="color: var(--accent);" class="font-extrabold">{{ user['name'] }}</span>'s Current Mental Pulses
+            </h1>
+        </div>
+
+        <div class="middle w-full p-5 flex flex-wrap gap-4 rounded-xl border border-accent">
+            <div class="first flex-1 min-w-[200px] h-[70vh]" style="border: solid var(--accent);">
+                <div id="anger" style="width: 100%; height: 100%;">
+
+                </div>
+            </div>
+            <div class="second flex-2 min-w-[200px] h-[70vh]" style="border: solid var(--accent);">
+                <div id="daily" style="width: 100%; height: 100%;">
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="last middle w-full min-w-[200px] p-5 h-[70vh] flex flex-wrap gap-4 rounded-xl border border-accent">
+            <div id="avgGraph" style="height: 100%; width: 100%; border: solid var(--accent);">
+                
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

@@ -1,0 +1,23 @@
+:root {
+    --text: #03001f;
+    --background: #cfc1fd;
+    --light-background: #a185ff;
+    --primary: #2e1e62;
+    --secondary: #502db9;
+    --accent: #3f1bb6;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text: #e3e0ff;
+        --background: #120e1c;
+        --light-background: #151122d6;
+        --primary: #ad9de1;
+        --secondary: #6946d2;
+        --accent: #6d49e4;
+    }
+}
+
+h1{
+    color: var(--text);
+    font-size: larger;
+}

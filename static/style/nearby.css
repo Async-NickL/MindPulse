@@ -1,0 +1,30 @@
+.place-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.place-card:hover {
+    transform: translateY(-2px);
+}
+
+#locationStatus {
+    transition: all 0.3s ease-in-out;
+}
+
+.place-card a {
+    transition: all 0.2s ease-in-out;
+}
+
+.place-card a:hover {
+    transform: scale(1.05);
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.loading {
+    animation: pulse 1.5s infinite;
+} 

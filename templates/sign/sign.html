@@ -1,0 +1,22 @@
+{% extends 'layout/main.html' %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style/main.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap justify-center items-center w-full min-h-screen">
+    <div class="section-1 h-screen max-sm:w-full max-sm:h-3/4 w-full max-w-3xl relative max-sm:hidden">
+        <div class="hider absolute h-[50px] w-[190px] z-[10] bottom-5 right-0"></div>
+        <spline-viewer url="https://prod.spline.design/44EtiaO26oO9JP7W/scene.splinecode"></spline-viewer>
+    </div>
+    <div class="section-2 flex flex-col gap-8 h-auto max-sm:w-full max-sm:h-3/4 w-full max-w-md justify-center max-sm:text-center">
+        <h1 class="title text-3xl font-bold mb-6"><span style="color: #6d49e4;">Mind-Pulse</span> <span style="color: white;">:</span> Mental Health Tracker</h1>
+        <div class="btns flex gap-4 flex-col justify-center">
+            <a href="/{{type}}/signup" class="button"><span>Sign Up</span></a>
+            <a href="/{{type}}/signin" class="button ml-4"><span>Sign In</span></a>
+        </div>
+    </div>
+</div>
+<script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.59/build/spline-viewer.js"></script>
+{% endblock %}

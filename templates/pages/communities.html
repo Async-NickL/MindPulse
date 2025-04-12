@@ -1,0 +1,36 @@
+{% extends 'layout/layout.html' %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style/communities.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="main min-h-screen w-full flex gap-4 p-4" style="background-color: var(--background);">
+    <div class="users-section flex-1 overflow-hidden rounded-xl p-4" style="border: solid 2px var(--primary);">
+        <h2 class="text-2xl font-bold mb-4" style="color: var(--primary);">Community You are in</h2>
+        <div class="users-list overflow-y-auto h-[calc(100vh-150px)] scrollbar-hide">
+            {% if user_groups %}
+                {% for group in user_groups %}
+                <div class="user-card mb-3 p-3 rounded-lg" style="background-color: var(--light-background);">
+                    <h3 class="text-lg font-semibold" style="color: var(--text);">{{group.name}}</h3>
+                    <p class="text-sm opacity-70" style="color: var(--text);">Group ID: {{group.id}}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-lg opacity-70" style="color: var(--text);">You haven't joined any communities yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="join-section flex-1 rounded-xl p-4" style="border: solid 2px var(--primary);">
+        <h2 class="text-2xl font-bold mb-4" style="color: var(--primary);">Join Community</h2>
+        <form action="/join-group/{{id}}" method="POST" class="w-full">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2" style="color: var(--text);">Community Code</label>
+                <input type="text" name="group_code" class="w-full p-2 rounded-lg" style="background-color: var(--light-background); color: var(--text); border: 1px solid var(--primary);" placeholder="Enter community code" required>
+            </div>
+            <button type="submit" class="px-4 py-2 rounded-lg font-semibold" style="background-color: var(--primary); color: var(--text);">Join Group</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

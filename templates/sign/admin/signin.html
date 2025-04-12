@@ -1,0 +1,56 @@
+{% extends 'layout/main.html' %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style/sign.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="contain w-screen min-h-screen flex justify-center items-center">
+        <div class="layout rounded-2xl overflow-hidden flex w-[60%] max-md:w-[75%] border-solid max-sm:w-[90%] gap-5">
+            <div class="section-1 w-[55%] max-sm:w-[100%] flex flex-col gap-10">
+                <h1 class="text-2xl font-bold text-center mb-5 title">ADMIN LOGIN</h1>
+                <form action="/admin/signin" class="flex flex-col gap-10" method="post" onsubmit="return validateForm()">
+                    <div>
+                        <label for="username">Username : </label>
+                        <input type="text" name="username" id="username" required>
+                    </div>
+                    <div>
+                        <label for="passwd">Password : </label>
+                        <input type="password" name="passwd" id="passwd" required>
+                    </div>
+                    <div>
+                        <label for="repasswd">Re-enter Password : </label>
+                        <input type="password" name="repasswd" id="repasswd" required>
+                        <span id="password-error" style="color: red; display: none;">Passwords do not match!</span>
+                    </div>
+                    <input type="submit" class="button" value="Sign In">
+                </form>
+            </div>
+
+            <div class="section-2 max-sm:hidden w-[45%] flex flex-col justify-center items-center gap-7 text-center">
+                <div class="content flex flex-col gap-2">
+                    <h1 class="text-2xl font-bold">Don't Have an Account?</h1>
+                    <p class="text-xl text-sm">
+                        Signup with your admin credentials
+                    </p>
+                </div>
+                <a href="/admin/signup" class="button">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function validateForm() {
+            const password = document.getElementById('passwd').value;
+            const repassword = document.getElementById('repasswd').value;
+            const errorElement = document.getElementById('password-error');
+
+            if (password !== repassword) {
+                errorElement.style.display = 'block';
+                return false;
+            }
+            errorElement.style.display = 'none';
+            return true;
+        }
+    </script>
+{% endblock %}
