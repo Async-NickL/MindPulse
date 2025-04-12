@@ -4,11 +4,15 @@ from dotenv import load_dotenv
 import uuid
 import os
 
-# Load environment variables
-load_dotenv()
+mongodb_uri = os.environ.get('MONGODB_URI', '')
+mongodb_uri = mongodb_uri.replace('${MONGODB_USERNAME}', os.environ.get('MONGODB_USERNAME', ''))
+mongodb_uri = mongodb_uri.replace('${MONGODB_PASSWORD}', os.environ.get('MONGODB_PASSWORD', ''))
+mongodb_uri = mongodb_uri.replace('${MONGODB_CLUSTER}', os.environ.get('MONGODB_CLUSTER', ''))
+mongodb_uri = mongodb_uri.replace('${MONGODB_DATABASE}', os.environ.get('MONGODB_DATABASE', ''))
+
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = os.getenv('MONGODB_URI')
+app.config["MONGO_URI"] = mongodb_uri
 mongo = PyMongo(app)
 users = mongo.db.users
 
