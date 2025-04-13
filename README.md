@@ -91,7 +91,7 @@ python app.py
 
 ## 📁 Project Structure 
 
-AISSMS/
+Main/
 ├── Backend/
 │ ├── model/
 │ │ ├── Admin.py
